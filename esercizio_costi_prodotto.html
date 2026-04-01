@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classifica i costi — Per produrre una T-shirt</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f6f2ed;
+    min-height: 100vh;
+    padding: 32px 20px;
+    color: #1a1a1a;
+  }
+
+  .container { max-width: 920px; margin: 0 auto; }
+
+  /* HEADER CARD */
+  .header-card {
+    background: white;
+    border-radius: 24px;
+    padding: 32px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 28px;
+    border: 1px solid #e8e2da;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(232,196,170,0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(40px, -60px);
+  }
+
+  .avatar {
+    width: 88px; height: 88px;
+    border-radius: 20px;
+    background: linear-gradient(145deg, #e8c4aa, #d4a07a);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(212,160,122,0.3);
+  }
+
+  .header-text h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px; font-weight: 900; margin-bottom: 8px;
+    color: #2a1f14;
+  }
+
+  .header-text p {
+    font-size: 15px; color: #5a4a3a; line-height: 1.65;
+  }
+
+  .header-text p strong {
+    color: #2a1f14;
+    font-weight: 700;
+  }
+
+  .product-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #faf5ef;
+    border: 1px solid #e8ddd0;
+    border-radius: 100px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #7a5c3a;
+    margin-top: 12px;
+  }
+
+  .emoji-row {
+    display: flex; gap: 8px; margin-top: 14px;
+  }
+
+  .emoji-badge {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: #faf5ef;
+    border: 1px solid #ede5da;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  /* INSTRUCTION */
+  .instruction {
+    font-size: 14px; color: #7a6b5a;
+    margin-bottom: 14px;
+    font-weight: 500;
+  }
+
+  /* CHIPS POOL */
+  .chips-pool {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 28px;
+    min-height: 50px;
+    padding: 16px;
+    background: white;
+    border-radius: 16px;
+    border: 1px dashed #d8cfc2;
+  }
+
+  .chip {
+    background: #faf5ef;
+    border: 1.5px solid #d8cfc2;
+    border-radius: 100px;
+    padding: 9px 18px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: grab;
+    user-select: none;
+    transition: box-shadow 0.15s, transform 0.15s, opacity 0.15s;
+    white-space: nowrap;
+    color: #3a2e20;
+    font-weight: 500;
+  }
+
+  .chip:hover {
+    box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    border-color: #bfb09e;
+  }
+  .chip.dragging { opacity: 0.35; cursor: grabbing; }
+  .chip.placed { display: none; }
+
+  /* DROP COLUMNS */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+
+  .drop-col {
+    border: 2px dashed #d0c8bc;
+    border-radius: 18px;
+    padding: 20px 14px;
+    min-height: 170px;
+    background: white;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+
+  .drop-col.drag-over {
+    border-color: #9a8570;
+    background: #fdf9f4;
+    box-shadow: 0 0 0 4px rgba(154,133,112,0.1);
+  }
+
+  .drop-col.correct-highlight { border-color: #6b9e6b; background: #f4faf4; }
+  .drop-col.wrong-highlight { border-color: #c47070; background: #fdf5f5; }
+
+  .col-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: #6a5d4e; text-transform: uppercase;
+    margin-bottom: 6px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .col-hint {
+    font-size: 11px;
+    color: #a0937f;
+    font-weight: 400;
+    margin-bottom: 14px;
+    line-height: 1.4;
+    font-style: italic;
+  }
+
+  .col-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .dot-diretto   { background: #2a1f14; }
+  .dot-indiretto { background: #b8907a; }
+  .dot-variabile { background: #7a9eb8; }
+
+  .drop-area {
+    min-height: 80px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .placed-chip {
+    border-radius: 100px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    position: relative;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+    transition: opacity 0.15s;
+    font-weight: 500;
+  }
+
+  .placed-chip:hover { opacity: 0.8; }
+
+  .placed-chip .remove-btn {
+    font-size: 16px; color: inherit; opacity: 0.45;
+    line-height: 1; flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .col-diretto   .placed-chip { background: #ede8e2; color: #2a1f14; }
+  .col-indiretto .placed-chip { background: #f5ece6; color: #5a3a2a; }
+  .col-variabile .placed-chip { background: #e6eff5; color: #2a4a5e; }
+
+  /* FEEDBACK */
+  .feedback-row {
+    display: flex; gap: 10px; align-items: center;
+    margin-top: 24px; flex-wrap: wrap;
+  }
+
+  .btn-check {
+    background: #2a1f14; color: #faf5ef;
+    border: none; border-radius: 100px;
+    padding: 12px 28px; font-size: 14px; font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .btn-check:hover { background: #4a3a28; }
+
+  .btn-reset {
+    background: white; color: #6a5d4e;
+    border: 1.5px solid #d8cfc2; border-radius: 100px;
+    padding: 12px 24px; font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .btn-reset:hover { background: #faf5ef; }
+
+  .result-msg {
+    font-size: 14px; font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 100px;
+    display: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .result-msg.show { display: inline-block; }
+  .result-msg.ok { background: #e8f2e8; color: #2e6b2e; }
+  .result-msg.ko { background: #f5e8e8; color: #8b2e2e; }
+
+  /* CHIP in drop area feedback */
+  .placed-chip.correct { outline: 2.5px solid #5a9a5a; outline-offset: 1px; }
+  .placed-chip.wrong   { outline: 2.5px solid #c47070; outline-offset: 1px; }
+
+  /* TOUCH SUPPORT */
+  .chip.touch-dragging {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0.85;
+    transform: scale(1.08);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  }
+
+  @media (max-width: 700px) {
+    .columns { grid-template-columns: 1fr; }
+    .header-card { flex-direction: column; }
+    .chip { font-size: 13px; padding: 8px 14px; }
+    body { padding: 20px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header-card">
+    <div class="avatar">👕</div>
+    <div class="header-text">
+      <h2>Filo&amp;Senso — Laboratorio sartoriale sociale</h2>
+      <p>La nostra cooperativa produce capi di abbigliamento artigianali con persone in percorsi di reinserimento lavorativo.<br>
+      Questa settimana stiamo producendo <strong>un lotto di 50 t-shirt in cotone biologico</strong>. Aiutaci a classificare i costi necessari per realizzare questo prodotto!</p>
+      <div class="product-badge">🏷️ Prodotto: T-shirt in cotone bio</div>
+      <div class="emoji-row">
+        <div class="emoji-badge">🧵</div>
+        <div class="emoji-badge">✂️</div>
+        <div class="emoji-badge">👕</div>
+        <div class="emoji-badge">📦</div>
+        <div class="emoji-badge">✨</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ISTRUZIONI -->
+  <p class="instruction">Trascina ogni voce di costo nella colonna corretta:</p>
+
+  <!-- CHIP POOL -->
+  <div class="chips-pool" id="pool">
+    <div class="chip" draggable="true" data-id="1" data-correct="diretto">Cotone bio per le t-shirt</div>
+    <div class="chip" draggable="true" data-id="2" data-correct="diretto">Ore di cucito delle sarte</div>
+    <div class="chip" draggable="true" data-id="3" data-correct="variabile">Filo per cuciture e rifiniture</div>
+    <div class="chip" draggable="true" data-id="4" data-correct="diretto">Taglio del cartamodello</div>
+    <div class="chip" draggable="true" data-id="5" data-correct="variabile">Etichette e cartellini per ogni capo</div>
+    <div class="chip" draggable="true" data-id="6" data-correct="indiretto">Manutenzione macchina da cucire</div>
+    <div class="chip" draggable="true" data-id="7" data-correct="indiretto">Quota affitto laboratorio</div>
+    <div class="chip" draggable="true" data-id="8" data-correct="variabile">Imballo e busta per la spedizione</div>
+    <div class="chip" draggable="true" data-id="9" data-correct="indiretto">Energia elettrica del laboratorio</div>
+  </div>
+
+  <!-- DROP COLUMNS -->
+  <div class="columns">
+
+    <div class="drop-col col-diretto" data-col="diretto">
+      <div class="col-label">
+        <span class="col-dot dot-diretto"></span>
+        Costo diretto
+      </div>
+      <div class="col-hint">Attribuibile direttamente alla singola t-shirt</div>
+      <div class="drop-area" id="drop-diretto"></div>
+    </div>
+
+    <div class="drop-col col-indiretto" data-col="indiretto">
+      <div class="col-label">
+        <span class="col-dot dot-indiretto"></span>
+        Costo indiretto
+      </div>
+      <div class="col-hint">Necessario alla produzione, ma non riferibile a una singola t-shirt</div>
+      <div class="drop-area" id="drop-indiretto"></div>
+    </div>
+
+    <div class="drop-col col-variabile" data-col="variabile">
+      <div class="col-label">
+        <span class="col-dot dot-variabile"></span>
+        Costo variabile
+      </div>
+      <div class="col-hint">Cambia in proporzione al numero di t-shirt prodotte</div>
+      <div class="drop-area" id="drop-variabile"></div>
+    </div>
+
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="feedback-row">
+    <button class="btn-check" onclick="checkAnswers()">Verifica</button>
+    <button class="btn-reset" onclick="resetAll()">Ricomincia</button>
+    <span class="result-msg" id="result-msg"></span>
+  </div>
+
+</div>
+
+<script>
+  let draggingId = null;
+  let touchClone = null;
+  let touchChip = null;
+
+  // ── DRAG FROM POOL (desktop) ────────────────────────────────
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('dragstart', e => {
+      draggingId = chip.dataset.id;
+      chip.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    chip.addEventListener('dragend', () => {
+      chip.classList.remove('dragging');
+    });
+
+    // ── TOUCH SUPPORT ───────────────────────────────────────
+    chip.addEventListener('touchstart', e => {
+      touchChip = chip;
+      draggingId = chip.dataset.id;
+      const touch = e.touches[0];
+
+      touchClone = chip.cloneNode(true);
+      touchClone.classList.add('touch-dragging');
+      touchClone.style.left = (touch.clientX - 60) + 'px';
+      touchClone.style.top = (touch.clientY - 20) + 'px';
+      document.body.appendChild(touchClone);
+
+      chip.classList.add('dragging');
+    }, { passive: true });
+
+    chip.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (!touchClone) return;
+      const touch = e.touches[0];
+      touchClone.style.left = (touch.clientX - 60) + 'px';
+      touchClone.style.top = (touch.clientY - 20) + 'px';
+
+      // Highlight drop targets
+      document.querySelectorAll('.drop-col').forEach(col => {
+        const rect = col.getBoundingClientRect();
+        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+          col.classList.add('drag-over');
+        } else {
+          col.classList.remove('drag-over');
+        }
+      });
+    }, { passive: false });
+
+    chip.addEventListener('touchend', e => {
+      if (!touchClone || !touchChip) return;
+      const touch = e.changedTouches[0];
+
+      document.querySelectorAll('.drop-col').forEach(col => {
+        col.classList.remove('drag-over');
+        const rect = col.getBoundingClientRect();
+        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+          const colName = col.dataset.col;
+          removeFromDropArea(touchChip.dataset.id);
+          addToDropArea(touchChip, colName);
+          touchChip.classList.add('placed');
+          clearFeedback();
+        }
+      });
+
+      touchClone.remove();
+      touchClone = null;
+      touchChip.classList.remove('dragging');
+      touchChip = null;
+      draggingId = null;
+    });
+  });
+
+  // ── DROP COLUMNS (desktop) ──────────────────────────────────
+  document.querySelectorAll('.drop-col').forEach(col => {
+    col.addEventListener('dragover', e => {
+      e.preventDefault();
+      col.classList.add('drag-over');
+    });
+
+    col.addEventListener('dragleave', () => {
+      col.classList.remove('drag-over');
+    });
+
+    col.addEventListener('drop', e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+
+      if (!draggingId) return;
+
+      const colName = col.dataset.col;
+      const chip = document.querySelector(`.chip[data-id="${draggingId}"]`);
+      if (!chip) return;
+
+      removeFromDropArea(draggingId);
+      addToDropArea(chip, colName);
+      chip.classList.add('placed');
+      draggingId = null;
+      clearFeedback();
+    });
+  });
+
+  // ── ADD TO DROP AREA ────────────────────────────────────────
+  function addToDropArea(chip, colName) {
+    const area = document.getElementById('drop-' + colName);
+    const placed = document.createElement('div');
+    placed.className = 'placed-chip';
+    placed.dataset.id = chip.dataset.id;
+    placed.dataset.correct = chip.dataset.correct;
+    placed.innerHTML = `<span>${chip.textContent}</span><span class="remove-btn">×</span>`;
+    placed.querySelector('.remove-btn').addEventListener('click', () => {
+      removeFromDropArea(chip.dataset.id);
+      chip.classList.remove('placed');
+      clearFeedback();
+    });
+    area.appendChild(placed);
+  }
+
+  // ── REMOVE FROM DROP AREA ───────────────────────────────────
+  function removeFromDropArea(id) {
+    const existing = document.querySelector(`.placed-chip[data-id="${id}"]`);
+    if (existing) existing.remove();
+  }
+
+  // ── VERIFY ──────────────────────────────────────────────────
+  function checkAnswers() {
+    clearFeedback();
+    let correct = 0, total = 0;
+
+    document.querySelectorAll('.placed-chip').forEach(placed => {
+      const col = placed.closest('.drop-col').dataset.col;
+      const isCorrect = placed.dataset.correct === col;
+      placed.classList.add(isCorrect ? 'correct' : 'wrong');
+      if (isCorrect) correct++;
+      total++;
+    });
+
+    const msg = document.getElementById('result-msg');
+    msg.classList.add('show');
+
+    if (total === 0) {
+      msg.className = 'result-msg show ko';
+      msg.textContent = 'Trascina almeno una voce prima di verificare!';
+    } else if (correct === 9) {
+      msg.className = 'result-msg show ok';
+      msg.textContent = '🎉 Perfetto! Tutti i costi della t-shirt sono classificati correttamente.';
+    } else {
+      msg.className = 'result-msg show ko';
+      msg.textContent = `${correct} su ${total} corrette — le voci in rosso vanno spostate.`;
+    }
+  }
+
+  // ── RESET ───────────────────────────────────────────────────
+  function resetAll() {
+    document.querySelectorAll('.placed-chip').forEach(p => p.remove());
+    document.querySelectorAll('.chip').forEach(c => {
+      c.classList.remove('placed', 'dragging');
+    });
+    clearFeedback();
+  }
+
+  function clearFeedback() {
+    document.querySelectorAll('.placed-chip').forEach(p => {
+      p.classList.remove('correct', 'wrong');
+    });
+    const msg = document.getElementById('result-msg');
+    msg.classList.remove('show', 'ok', 'ko');
+  }
+</script>
+</body>
+</html>
